@@ -3,7 +3,7 @@
 A machine-learning project that predicts which telecom customers are likely to cancel,
 with a Streamlit app where the decision threshold can be tuned to business costs.
 
-**Live app:** <paste your Streamlit link here>
+**Live app:** <https://churnvision-ai.streamlit.app/>
 
 ## Problem
 
