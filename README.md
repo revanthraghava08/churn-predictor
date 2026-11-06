@@ -5,6 +5,14 @@ with a Streamlit app where the decision threshold can be tuned to business costs
 
 **Live app:** <https://churnvision-ai.streamlit.app/>
 
+## Application Preview
+
+![CHURN.AI Customer Churn Prediction Dashboard](assets/churn-ai-dashboard.png)
+
+*CHURN.AI — An interactive customer intelligence platform
+for predicting churn risk and supporting cost-aware retention decisions.*
+
+
 ## Problem
 
 Losing a customer costs more than offering a retention deal to someone who would have stayed.
@@ -49,7 +57,7 @@ noise (about 0.011), so both were left out. Logistic regression's `C` was flat f
 ### Threshold
 
 The cost-minimising threshold follows from the costs: flag a customer when
-`p > cost_false_alarm / (cost_false_alarm + cost_missed_churner)`.
+`p >= cost_false_alarm / (cost_false_alarm + cost_missed_churner)`.
 With the placeholder costs below, that is about 0.09, and out-of-fold results agreed (best at 0.10).
 
 ### Final test set (1,409 customers, threshold 0.10)
@@ -71,15 +79,15 @@ Under *assumed* costs of 500 per missed churner and 50 per wasted offer:
 | Flag everybody | 51,750 |
 | This model at 0.10 | 35,650 |
 
-The model beats doing nothing by a wide margin and beats blanket offers by about 31%.
+The model reduces assumed cost by approximately 31.1% compared with flagging everybody.
 
 ## Limitations
 
 - The costs (500 and 50) are placeholders, not measured business figures. The best threshold
   moves with them, which is why the app exposes a slider.
 - The cost model assumes every flagged churner can be saved, which overstates the benefit.
-- The app estimates `TotalCharges` as tenure × monthly charges.
-- One public sample dataset, no time dimension: not validated for real deployment.
+- The app initially suggests TotalCharges as tenure × monthly charges, but allows users to enter the actual accumulated charges when available.
+- Initial model exploration and comparison used cross-validation on the full dataset before the final train/test workflow. Consequently, some model-development      decisions were informed by the full dataset, and the held-out test result should be interpreted as a useful evaluation rather than a completely untouched          external validation.
 
 ## Run locally
 
