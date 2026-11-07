@@ -564,7 +564,7 @@ st.markdown(
     textwrap.dedent(
         """
         <div class="section-heading">◈ Billing intelligence</div>
-        <div class="section-note">The total-charge field starts with a tenure × monthly-charge estimate and remains editable.</div>
+        <div class="section-note">Total charges are estimated using tenure × monthly charges by default. Enable the actual total option if you know the customer's recorded billing total.</div>
         """
     ),
     unsafe_allow_html=True,
@@ -585,23 +585,18 @@ with billing_left:
 estimated_total = float(tenure * monthly)
 
 with billing_right:
-    # Streamlit keeps widget state after first creation. This is intentional:
-    # users can override the suggested estimate with the actual accumulated total.
-    if "total_charges" not in st.session_state:
-        st.session_state["total_charges"] = estimated_total
-
-    total = st.number_input(
-        "Total charges",
-        min_value=0.0,
-        max_value=20000.0,
-        value=float(estimated_total),
-        step=10.0,
-        key="total_charges",
-    )
+    use_actual_total = st.checkbox("I know the actual total charges", value=False, key="use_actual_total")
+    if use_actual_total:
+        total = st.number_input(
+            "Total charges", min_value=0.0, max_value=20000.0,
+            value=float(estimated_total), step=10.0, key="total_charges",
+        )
+    else:
+        total = estimated_total
 
 st.caption(
     f"Suggested estimate: {estimated_total:.2f} | "
-    f"Current total charges entered: {total:.2f}"
+    f"Current total charges used: {total:.2f}"
 )
 
 
@@ -689,6 +684,11 @@ if run_prediction:
         if not 0.0 <= probability <= 1.0:
             raise ValueError("The model returned a probability outside the 0–1 range.")
 
+        current_signature = {
+            **input_row.iloc[0].to_dict(),
+            "threshold": float(threshold),
+        }
+
         st.session_state["last_prediction"] = {
             "probability": probability,
             "threshold": float(threshold),
@@ -698,6 +698,7 @@ if run_prediction:
             "total": float(total),
             "contract": str(contract),
             "internet": str(internet),
+            "signature": current_signature,
         }
 
     except Exception as exc:
@@ -706,8 +707,19 @@ if run_prediction:
 
 # Show the last submitted prediction until the next analysis is run.
 result = st.session_state.get("last_prediction")
+current_signature = {
+    **input_row.iloc[0].to_dict(),
+    "threshold": float(threshold),
+}
 
 if result is not None:
+
+    if result.get("signature") != current_signature:
+        st.warning(
+            "Inputs or threshold changed since this analysis. "
+            "Click ANALYZE CUSTOMER to update."
+        )
+
     probability = result["probability"]
     used_threshold = result["threshold"]
     flagged = result["flagged"]
